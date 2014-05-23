@@ -1,0 +1,38 @@
+name:                tilt
+version:             0.1.0.0
+license:             BSD3
+license-file:        LICENSE
+author:              Andres Löh
+maintainer:          andres@well-typed.com
+category:            Data
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Data.Type.Env,
+                       Data.Type.Fin,
+                       Data.Type.Vec,
+                       Data.Type.BaseFunctor,
+                       Data.Type.Nat,
+                       Data.Type.List,
+                       Data.Type.Constraint,
+                       Data.Type.Ptr
+  other-extensions:    OverloadedStrings,
+                       GADTs,
+                       KindSignatures,
+                       TypeOperators,
+                       DataKinds,
+                       StandaloneDeriving,
+                       TypeSynonymInstances,
+                       FlexibleInstances,
+                       ExplicitForAll,
+                       RankNTypes,
+                       ConstraintKinds,
+                       TypeFamilies,
+                       PolyKinds,
+                       UndecidableInstances,
+                       InstanceSigs
+  build-depends:       base >=4.6 && <4.7
+  hs-source-dirs:      src
+  default-language:    Haskell2010
