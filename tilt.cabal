@@ -13,7 +13,7 @@ library
   exposed-modules:     Data.Type.Env,
                        Data.Type.Fin,
                        Data.Type.Vec,
-                       Data.Type.BaseFunctor,
+                       Data.Type.BasicFunctors,
                        Data.Type.Nat,
                        Data.Type.List,
                        Data.Type.Constraint,
@@ -33,6 +33,6 @@ library
                        PolyKinds,
                        UndecidableInstances,
                        InstanceSigs
-  build-depends:       base >=4.6 && <4.7
+  build-depends:       base >=4.6 && <5
   hs-source-dirs:      src
   default-language:    Haskell2010

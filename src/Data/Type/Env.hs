@@ -2,7 +2,7 @@
 module Data.Type.Env where
 
 import Data.Functor ((<$>))
-import Data.Type.BaseFunctor
+import Data.Type.BasicFunctors
 import Data.Type.Constraint
 import Data.Type.List
 import Data.Type.Ptr

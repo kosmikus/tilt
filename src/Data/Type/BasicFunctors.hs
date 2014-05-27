@@ -1,6 +1,6 @@
 {-# LANGUAGE PolyKinds #-}
 -- | Short names for polykinded basic functors.
-module Data.Type.BaseFunctor where
+module Data.Type.BasicFunctors where
 
 data I a = I a
   deriving Show
