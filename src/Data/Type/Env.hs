@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, GADTs, KindSignatures, TypeOperators, DataKinds, StandaloneDeriving, TypeSynonymInstances, FlexibleInstances, ExplicitForAll, RankNTypes, ConstraintKinds, TypeFamilies, PolyKinds, UndecidableInstances, ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, GADTs, KindSignatures, TypeOperators, DataKinds, StandaloneDeriving, TypeSynonymInstances, FlexibleInstances, ExplicitForAll, RankNTypes, ConstraintKinds, TypeFamilies, PolyKinds, UndecidableInstances, ScopedTypeVariables, RoleAnnotations #-}
 module Data.Type.Env where
 
 import Control.Applicative
@@ -8,9 +8,11 @@ import Data.Type.BasicFunctors
 import Data.Type.Constraint
 import Data.Type.List
 import Data.Type.Ptr
+import Data.Type.Some
 import GHC.Exts (Constraint)
 import Prelude hiding (reverse, zipWith, map, (!!), (++))
 
+type role Env nominal representational
 data Env :: [k] -> (k -> *) -> * where
   Nil  :: Env '[] f
   (:*) :: f a -> Env as f -> Env (a ': as) f
@@ -18,7 +20,7 @@ data Env :: [k] -> (k -> *) -> * where
 infixr 5 :*
 
 deriving instance All Eq (Map f as) => Eq (Env as f)
-deriving instance (All Eq (Map f as), All Ord (Map f as)) => Ord  (Env as f)
+deriving instance (All Eq (Map f as), All Ord (Map f as)) => Ord (Env as f)
 deriving instance All Show (Map f as) => Show (Env as f)
 
 map :: (forall a. f a -> g a)
@@ -52,7 +54,7 @@ toList :: Env xs (K a) -> [a]
 toList Nil         = []
 toList (K x :* xs) = x : toList xs
 
-(!!) :: Env xs f -> Ptr xs x -> f x
+(!!) :: Env xs f -> Ptr x xs -> f x
 (x :* xs) !! PZero  = x
 (x :* xs) !! PSuc i = xs !! i
 
@@ -64,18 +66,18 @@ infixr 5 ++
 
 elemPtr :: (forall a. f a -> Bool)
         -> Env as f
-        -> Maybe (SomePtr as)
+        -> Maybe (Some Ptr as)
 elemPtr p Nil       = Nothing
 elemPtr p (x :* xs)
-  | p x             = Just (SomePtr PZero)
-  | otherwise       = (\ (SomePtr i) -> SomePtr (PSuc i)) <$> elemPtr p xs
+  | p x             = Just (Some PZero)
+  | otherwise       = shift <$> elemPtr p xs
 
 elemPtrs :: (forall a. f a -> Bool)
          -> Env as f
-         -> [SomePtr as]
+         -> [Some Ptr as]
 elemPtrs p Nil       = []
 elemPtrs p (x :* xs)
-  | p x              = SomePtr PZero : L.map shift (elemPtrs p xs)
+  | p x              = Some PZero : L.map shift (elemPtrs p xs)
   | otherwise        = L.map shift (elemPtrs p xs)
 
 reverse :: Env as f -> Env (Reverse as) f
@@ -84,10 +86,4 @@ reverse xs = go xs Nil
     go :: Env as f -> Env bs f -> Env (ReverseAcc as bs) f
     go Nil       acc = acc
     go (x :* xs) acc = go xs (x :* acc)
-
-data SomeEnv :: (k -> *) -> * where
-  SomeEnv :: Env as f -> SomeEnv f
-
-withSomeEnv :: SomeEnv f -> (forall as. Env as f -> r) -> r
-withSomeEnv (SomeEnv xs) k = k xs
 

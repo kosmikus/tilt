@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators #-}
+{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators, RoleAnnotations, RankNTypes #-}
 module Data.Type.Vec where
 
 import Control.Applicative
@@ -10,6 +10,7 @@ import Data.Type.Fin
 import Data.Type.Nat
 import Prelude hiding (length, replicate, zipWith, (++), (!!))
 
+type role Vec nominal representational
 data Vec :: Nat -> * -> * where
   Nil  :: Vec Zero a
   (:*) :: a -> Vec n a -> Vec (Suc n) a
@@ -19,6 +20,12 @@ infixr 5 :*
 deriving instance Eq a => Eq (Vec n a)
 deriving instance Ord a => Ord (Vec n a)
 deriving instance Show a => Show (Vec n a)
+
+head :: Vec (Suc n) a -> a
+head (x :* xs) = x
+
+tail :: Vec (Suc n) a -> Vec n a
+tail (x :* xs) = xs
 
 length :: Vec n a -> SNat n
 length Nil       = SZero
@@ -66,3 +73,4 @@ reverse xs = gcastWith (thmPlusZero (length xs)) $ go xs Nil
 (!!) :: Vec n a -> Fin n -> a
 (x :* xs) !! FZero  = x
 (x :* xs) !! FSuc i = xs !! i
+
