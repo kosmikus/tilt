@@ -3,6 +3,7 @@ module Data.Type.Env where
 
 import Control.Applicative
 import Data.Functor ((<$>))
+import qualified Data.List as L
 import Data.Type.BasicFunctors
 import Data.Type.Constraint
 import Data.Type.List
@@ -61,13 +62,21 @@ Nil       ++ ys = ys
 
 infixr 5 ++
 
-findPtr :: (forall a. f a -> Bool)
+elemPtr :: (forall a. f a -> Bool)
         -> Env as f
         -> Maybe (SomePtr as)
-findPtr p Nil       = Nothing
-findPtr p (x :* xs)
+elemPtr p Nil       = Nothing
+elemPtr p (x :* xs)
   | p x             = Just (SomePtr PZero)
-  | otherwise       = (\ (SomePtr i) -> SomePtr (PSuc i)) <$> findPtr p xs
+  | otherwise       = (\ (SomePtr i) -> SomePtr (PSuc i)) <$> elemPtr p xs
+
+elemPtrs :: (forall a. f a -> Bool)
+         -> Env as f
+         -> [SomePtr as]
+elemPtrs p Nil       = []
+elemPtrs p (x :* xs)
+  | p x              = SomePtr PZero : L.map shift (elemPtrs p xs)
+  | otherwise        = L.map shift (elemPtrs p xs)
 
 reverse :: Env as f -> Env (Reverse as) f
 reverse xs = go xs Nil
@@ -81,3 +90,4 @@ data SomeEnv :: (k -> *) -> * where
 
 withSomeEnv :: SomeEnv f -> (forall as. Env as f -> r) -> r
 withSomeEnv (SomeEnv xs) k = k xs
+
