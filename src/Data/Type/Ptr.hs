@@ -5,6 +5,8 @@ data Ptr :: [k] -> k -> * where
   PZero :: Ptr (x ': xs) x
   PSuc  :: Ptr xs y -> Ptr (x ': xs) y
 
+deriving instance Eq (Ptr xs x)
+deriving instance Ord (Ptr xs x)
 deriving instance Show (Ptr xs x)
 
 data SomePtr :: [k] -> * where

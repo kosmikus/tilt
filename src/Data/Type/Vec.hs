@@ -1,6 +1,10 @@
 {-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators #-}
 module Data.Type.Vec where
 
+import Control.Applicative
+import Data.Foldable
+import Data.Monoid
+import Data.Traversable
 import Data.Type.Equality
 import Data.Type.Fin
 import Data.Type.Nat
@@ -10,17 +14,20 @@ data Vec :: Nat -> * -> * where
   Nil  :: Vec Zero a
   (:*) :: a -> Vec n a -> Vec (Suc n) a
 
-deriving instance (Show a) => Show (Vec n a)
-
 infixr 5 :*
+
+deriving instance Eq a => Eq (Vec n a)
+deriving instance Ord a => Ord (Vec n a)
+deriving instance Show a => Show (Vec n a)
 
 length :: Vec n a -> SNat n
 length Nil       = SZero
 length (x :* xs) = SSuc (length xs)
 
-toList :: Vec n a -> [a]
-toList Nil       = []
-toList (x :* xs) = x : toList xs
+instance Foldable (Vec n) where
+  foldMap :: (Monoid m) => (a -> m) -> Vec n a -> m
+  foldMap f Nil       = mempty
+  foldMap f (x :* xs) = f x <> foldMap f xs
 
 zipWith :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 zipWith op Nil       Nil       = Nil
@@ -30,6 +37,11 @@ instance Functor (Vec n) where
   fmap :: (a -> b) -> Vec n a -> Vec n b
   fmap f Nil       = Nil
   fmap f (x :* xs) = f x :* fmap f xs
+
+instance Traversable (Vec n) where
+  traverse :: Applicative i => (a -> i b) -> Vec n a -> i (Vec n b)
+  traverse f Nil       = pure Nil
+  traverse f (x :* xs) = (:*) <$> f x <*> traverse f xs
 
 replicate :: SNat n -> a -> Vec n a
 replicate SZero    x = Nil
