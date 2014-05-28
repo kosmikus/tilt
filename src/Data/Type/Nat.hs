@@ -1,15 +1,16 @@
-{-# LANGUAGE DataKinds, GADTs, TypeOperators, KindSignatures, TypeFamilies, UndecidableInstances, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds, GADTs, TypeOperators, KindSignatures, TypeFamilies, UndecidableInstances, RankNTypes, ScopedTypeVariables, AutoDeriveTypeable, StandaloneDeriving #-}
 module Data.Type.Nat where
 
 import Data.Functor
 import Data.Proxy
+import Data.Typeable
 import Data.Type.Equality
 
 -- | Peano-style natural numbers.
 --
 -- Mainly useful as promoted index.
 data Nat = Zero | Suc Nat
-  deriving (Show, Read, Eq, Ord)
+  deriving (Show, Read, Eq, Ord, Typeable)
 
 type N0 = Zero
 type N1 = Suc N0
@@ -22,6 +23,11 @@ type N6 = Suc N5
 data SNat (n :: Nat) where
   SZero :: SNat Zero
   SSuc  :: SNat n -> SNat (Suc n)
+
+deriving instance Eq (SNat n)
+deriving instance Ord (SNat n)
+deriving instance Show (SNat n)
+deriving instance Typeable SNat
 
 class SNatI (n :: Nat) where
   sNat :: SNat n

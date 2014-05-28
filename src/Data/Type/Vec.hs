@@ -1,14 +1,15 @@
-{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators, RoleAnnotations, RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators, RoleAnnotations, RankNTypes, ScopedTypeVariables, AutoDeriveTypeable, PolyKinds #-}
 module Data.Type.Vec where
 
 import Control.Applicative
 import Data.Foldable
 import Data.Monoid
+import Data.Typeable
 import Data.Traversable
 import Data.Type.Equality
 import Data.Type.Fin
 import Data.Type.Nat
-import Prelude hiding (length, replicate, zipWith, (++), (!!))
+import Prelude hiding (length, replicate, zipWith, unzip, (++), (!!))
 
 type role Vec nominal representational
 data Vec :: Nat -> * -> * where
@@ -20,6 +21,11 @@ infixr 5 :*
 deriving instance Eq a => Eq (Vec n a)
 deriving instance Ord a => Ord (Vec n a)
 deriving instance Show a => Show (Vec n a)
+deriving instance Typeable Vec
+
+instance (SNatI n, Monoid a) => Monoid (Vec n a) where
+  mempty  = replicate mempty
+  mappend = zipWith mappend
 
 head :: Vec (Suc n) a -> a
 head (x :* xs) = x
@@ -40,6 +46,13 @@ zipWith :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 zipWith op Nil       Nil       = Nil
 zipWith op (x :* xs) (y :* ys) = op x y :* zipWith op xs ys
 
+zip :: Vec n a -> Vec n b -> Vec n (a, b)
+zip = zipWith (,)
+
+unzip :: Vec n (a, b) -> (Vec n a, Vec n b)
+unzip Nil              = (Nil, Nil)
+unzip ((x , y) :* xys) = let (xs, ys) = unzip xys in (x :* xs, y :* ys)
+
 cata :: forall a r n.
         r Zero
      -> (forall n. a -> r n -> r (Suc n))
@@ -51,26 +64,53 @@ cata nil cons = go
     go Nil       = nil
     go (x :* xs) = cons x (go xs)
 
+newtype Shift (r :: Nat -> *) (n :: Nat) where
+  Shift :: r (Suc n) -> Shift r n
+
+unShift :: Shift r n -> r (Suc n)
+unShift (Shift x) = x
+
+newtype Flip (f :: k1 -> k2 -> *) (x :: k2) (y :: k1) where
+  Flip :: f y x -> Flip f x y
+
+unFlip :: Flip f x y -> f y x
+unFlip (Flip x) = x
+
+catal :: forall a r n.
+         r Zero
+      -> (forall n. r n -> a -> r (Suc n))
+      -> Vec n a
+      -> r n
+catal nil cons Nil       = nil
+catal nil cons (x :* xs) = unShift (catal (Shift (cons nil x)) (\ (Shift r) x -> Shift (cons r x)) xs)
+
 instance Functor (Vec n) where
   fmap :: (a -> b) -> Vec n a -> Vec n b
   fmap f Nil       = Nil
   fmap f (x :* xs) = f x :* fmap f xs
+
+instance SNatI n => Applicative (Vec n) where
+  pure  = replicate
+  (<*>) = zipWith ($)
 
 instance Traversable (Vec n) where
   traverse :: Applicative i => (a -> i b) -> Vec n a -> i (Vec n b)
   traverse f Nil       = pure Nil
   traverse f (x :* xs) = (:*) <$> f x <*> traverse f xs
 
-replicate :: SNat n -> a -> Vec n a
-replicate SZero    x = Nil
-replicate (SSuc n) x = x :* replicate n x
+replicate' :: SNat n -> a -> Vec n a
+replicate' SZero    x = Nil
+replicate' (SSuc n) x = x :* replicate' n x
 
-replicate' :: SNatI n => a -> Vec n a
-replicate' = replicate sNat
+replicate :: SNatI n => a -> Vec n a
+replicate = replicate' sNat
 
 (++) :: Vec m a -> Vec n a -> Vec (m + n) a
 Nil       ++ ys = ys
 (x :* xs) ++ ys = x :* (xs ++ ys)
+
+reverse' :: Vec n a -> Vec n a
+reverse' xs = unFlip $ catal (Flip Nil) (\ (Flip acc) x -> Flip (x :* acc)) xs
 
 reverse :: Vec n a -> Vec n a
 reverse xs = gcastWith (thmPlusZero (length xs)) $ go xs Nil
@@ -85,3 +125,9 @@ reverse xs = gcastWith (thmPlusZero (length xs)) $ go xs Nil
 (x :* xs) !! FZero  = x
 (x :* xs) !! FSuc i = xs !! i
 
+tabulate :: SNat n -> (Fin n -> a) -> Vec n a
+tabulate SZero    f = Nil
+tabulate (SSuc s) f = f FZero :* tabulate s (f . FSuc)
+
+allFin :: SNat n -> Vec n (Fin n)
+allFin n = tabulate n id
