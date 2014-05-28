@@ -114,9 +114,15 @@ reverse xs = gcastWith (thmPlusZero (length xs)) $ go xs Nil
 (x :* xs) !! FZero  = x
 (x :* xs) !! FSuc i = xs !! i
 
-tabulate :: SNat n -> (Fin n -> a) -> Vec n a
-tabulate SZero    f = Nil
-tabulate (SSuc s) f = f FZero :* tabulate s (f . FSuc)
+tabulate' :: SNat n -> (Fin n -> a) -> Vec n a
+tabulate' SZero    f = Nil
+tabulate' (SSuc s) f = f FZero :* tabulate' s (f . FSuc)
 
-allFin :: SNat n -> Vec n (Fin n)
-allFin n = tabulate n id
+tabulate :: SNatI n => (Fin n -> a) -> Vec n a
+tabulate = tabulate' sNat
+
+allFin' :: SNat n -> Vec n (Fin n)
+allFin' n = tabulate' n id
+
+allFin :: SNatI n => Vec n (Fin n)
+allFin = allFin' sNat
