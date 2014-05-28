@@ -1,4 +1,4 @@
-{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators, RoleAnnotations, RankNTypes #-}
+{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators, RoleAnnotations, RankNTypes, ScopedTypeVariables #-}
 module Data.Type.Vec where
 
 import Control.Applicative
@@ -39,6 +39,17 @@ instance Foldable (Vec n) where
 zipWith :: (a -> b -> c) -> Vec n a -> Vec n b -> Vec n c
 zipWith op Nil       Nil       = Nil
 zipWith op (x :* xs) (y :* ys) = op x y :* zipWith op xs ys
+
+cata :: forall a r n.
+        r Zero
+     -> (forall n. a -> r n -> r (Suc n))
+     -> Vec n a
+     -> r n
+cata nil cons = go
+  where
+    go :: forall n. Vec n a -> r n
+    go Nil       = nil
+    go (x :* xs) = cons x (go xs)
 
 instance Functor (Vec n) where
   fmap :: (a -> b) -> Vec n a -> Vec n b

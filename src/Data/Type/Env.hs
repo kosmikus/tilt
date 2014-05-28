@@ -39,16 +39,17 @@ zipWith :: (forall a. f a -> g a -> h a)
 zipWith op Nil       Nil       = Nil
 zipWith op (x :* xs) (y :* ys) = op x y :* zipWith op xs ys
 
-foldr :: forall f r xs.
-         (forall x xs. f x -> r xs -> r (x ': xs))
-      -> r '[]
-      -> Env xs f
-      -> r xs
-foldr op e = go
+-- | Catamorphism / induction principle on environments.
+cata :: forall f r xs.
+        r '[]
+     -> (forall x xs. f x -> r xs -> r (x ': xs))
+     -> Env xs f
+     -> r xs
+cata nil cons = go
   where
     go :: forall xs. Env xs f -> r xs
-    go Nil       = e
-    go (x :* xs) = op x (go xs)
+    go Nil       = nil
+    go (x :* xs) = cons x (go xs)
 
 toList :: Env xs (K a) -> [a]
 toList Nil         = []

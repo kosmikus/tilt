@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, GADTs, TypeOperators, KindSignatures, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE DataKinds, GADTs, TypeOperators, KindSignatures, TypeFamilies, UndecidableInstances, RankNTypes, ScopedTypeVariables #-}
 module Data.Type.Nat where
 
 import Data.Functor
@@ -31,6 +31,17 @@ instance SNatI Zero where
 
 instance SNatI n => SNatI (Suc n) where
   sNat = SSuc sNat
+
+ind :: forall r n.
+       r Zero
+    -> (forall n. r n -> r (Suc n))
+    -> SNat n
+    -> r n
+ind zero suc = go
+  where
+    go :: forall n. SNat n -> r n
+    go SZero    = zero
+    go (SSuc n) = suc (go n)
 
 (==?) :: SNat m -> SNat n -> Maybe (m :~: n)
 (==?) SZero    SZero    = Just Refl
