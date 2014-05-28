@@ -6,6 +6,7 @@ import Data.Foldable
 import Data.Monoid
 import Data.Typeable
 import Data.Traversable
+import Data.Type.BasicFunctors
 import Data.Type.Equality
 import Data.Type.Fin
 import Data.Type.Nat
@@ -63,18 +64,6 @@ cata nil cons = go
     go :: forall n. Vec n a -> r n
     go Nil       = nil
     go (x :* xs) = cons x (go xs)
-
-newtype Shift (r :: Nat -> *) (n :: Nat) where
-  Shift :: r (Suc n) -> Shift r n
-
-unShift :: Shift r n -> r (Suc n)
-unShift (Shift x) = x
-
-newtype Flip (f :: k1 -> k2 -> *) (x :: k2) (y :: k1) where
-  Flip :: f y x -> Flip f x y
-
-unFlip :: Flip f x y -> f y x
-unFlip (Flip x) = x
 
 catal :: forall a r n.
          r Zero

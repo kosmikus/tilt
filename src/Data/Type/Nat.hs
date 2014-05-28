@@ -69,3 +69,12 @@ thmPlusZero (SSuc s) = gcastWith (thmPlusZero s) Refl
 thmPlusSuc :: SNat m -> SNat n -> (m + Suc n) :~: (Suc (m + n))
 thmPlusSuc SZero    _ = Refl
 thmPlusSuc (SSuc s) n = gcastWith (thmPlusSuc s n) Refl
+
+newtype Shift (r :: Nat -> *) (n :: Nat) where
+  Shift :: r (Suc n) -> Shift r n
+
+deriving instance Show (r (Suc n)) => Show (Shift r n)
+
+unShift :: Shift r n -> r (Suc n)
+unShift (Shift x) = x
+
