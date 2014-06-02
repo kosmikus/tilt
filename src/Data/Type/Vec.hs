@@ -126,3 +126,18 @@ allFin' n = tabulate' n id
 
 allFin :: SNatI n => Vec n (Fin n)
 allFin = allFin' sNat
+
+splitAt' :: SNat m -> Vec (m + n) a -> (Vec m a, Vec n a)
+splitAt' SZero xs           = (Nil, xs)
+splitAt' (SSuc s) (x :* xs) = let (ys, zs) = splitAt' s xs in (x :* ys, zs)
+
+data VecSumPair n a where
+  VecSumPair :: Vec m a -> Vec n a -> VecSumPair (m + n) a
+
+partition :: (a -> Bool) -> Vec n a -> VecSumPair n a
+partition p Nil       = VecSumPair Nil Nil
+partition p (x :* xs)
+  | p x               = case partition p xs of
+                          VecSumPair ys zs -> VecSumPair (x :* ys) zs
+  | otherwise         = case partition p xs of
+                          VecSumPair ys zs -> gcastWith (thmPlusSuc (length ys) (length zs)) (VecSumPair ys (x :* zs))
