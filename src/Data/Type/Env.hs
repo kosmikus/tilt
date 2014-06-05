@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, GADTs, KindSignatures, TypeOperators, DataKinds, StandaloneDeriving, TypeSynonymInstances, FlexibleInstances, ExplicitForAll, RankNTypes, ConstraintKinds, TypeFamilies, PolyKinds, UndecidableInstances, ScopedTypeVariables, RoleAnnotations #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Data.Type.Env where
 
 import Control.Applicative
@@ -19,9 +19,9 @@ data Env :: [k] -> (k -> *) -> * where
 
 infixr 5 :*
 
-deriving instance All Eq (Map f as) => Eq (Env as f)
-deriving instance (All Eq (Map f as), All Ord (Map f as)) => Ord (Env as f)
-deriving instance All Show (Map f as) => Show (Env as f)
+deriving instance AllF Eq f as => Eq (Env as f)
+deriving instance (AllF Eq f as, AllF Ord f as) => Ord (Env as f)
+deriving instance AllF Show f as => Show (Env as f)
 
 map :: (forall a. f a -> g a)
     -> Env xs f -> Env xs g
@@ -59,7 +59,7 @@ toList (K x :* xs) = x : toList xs
 (x :* xs) !! PZero  = x
 (x :* xs) !! PSuc i = xs !! i
 
-(++) :: Env xs f -> Env ys f -> Env (xs ++ ys) f
+(++) :: Env xs f -> Env ys f -> Env (xs :++ ys) f
 Nil       ++ ys = ys
 (x :* xs) ++ ys = x :* xs ++ ys
 

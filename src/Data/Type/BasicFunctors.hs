@@ -1,4 +1,3 @@
-{-# LANGUAGE PolyKinds, GADTs #-}
 -- | Short names for polykinded basic functors.
 module Data.Type.BasicFunctors where
 

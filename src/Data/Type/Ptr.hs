@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, KindSignatures, GADTs, DataKinds, PolyKinds, StandaloneDeriving, RankNTypes, RoleAnnotations, AutoDeriveTypeable, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Data.Type.Ptr where
 
 import Data.Typeable

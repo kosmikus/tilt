@@ -1,7 +1,8 @@
-{-# LANGUAGE GADTs, KindSignatures, StandaloneDeriving, DataKinds, RoleAnnotations, AutoDeriveTypeable, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Data.Type.Fin where
 
 import Data.Functor
+import Data.Singletons.TH
 import Data.Type.Nat
 import Data.Typeable
 import Language.Haskell.TH
@@ -16,10 +17,6 @@ deriving instance Eq (Fin n)
 deriving instance Ord (Fin n)
 deriving instance Show (Fin n)
 deriving instance Typeable Fin
-
-toNat :: Fin n -> Nat
-toNat FZero    = Zero
-toNat (FSuc i) = Suc (toNat i)
 
 fin :: QuasiQuoter
 fin = QuasiQuoter {
@@ -42,3 +39,15 @@ fin = QuasiQuoter {
         go :: Integer -> Q Pat
         go 0 = [p| FZero |]
         go n = [p| FSuc $(go (n - 1)) |]
+
+toNat :: Fin n -> Nat
+toNat FZero    = Zero
+toNat (FSuc i) = Suc (toNat i)
+
+instance SNatI n => Bounded (Fin (Suc n)) where
+  minBound = FZero
+  maxBound = maxBound' sNat
+
+maxBound' :: SNat n -> Fin (Suc n)
+maxBound' SZero    = FZero
+maxBound' (SSuc s) = FSuc (maxBound' s)

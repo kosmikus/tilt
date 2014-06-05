@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs, KindSignatures, DataKinds, StandaloneDeriving, InstanceSigs, TypeFamilies, TypeOperators, RoleAnnotations, RankNTypes, ScopedTypeVariables, AutoDeriveTypeable, PolyKinds #-}
 module Data.Type.Vec where
 
 import Control.Applicative

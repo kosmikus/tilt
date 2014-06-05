@@ -1,8 +1,10 @@
-{-# LANGUAGE DataKinds, GADTs, TypeOperators, KindSignatures, TypeFamilies, UndecidableInstances, RankNTypes, ScopedTypeVariables, AutoDeriveTypeable, StandaloneDeriving, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Data.Type.Nat where
 
 import Data.Functor
 import Data.Proxy
+import Data.Singletons.TH
 import Data.Typeable
 import Data.Type.Equality
 import Language.Haskell.TH
@@ -13,6 +15,8 @@ import Language.Haskell.TH.Quote
 -- Mainly useful as promoted index.
 data Nat = Zero | Suc Nat
   deriving (Show, Read, Eq, Ord, Typeable)
+
+genSingletons [''Nat]
 
 type N0 = Zero
 type N1 = Suc N0
@@ -51,14 +55,9 @@ nat = QuasiQuoter {
         go 0 = [t| Zero |]
         go n = [t| Suc $(go (n - 1)) |]
 
-data SNat (n :: Nat) where
-  SZero :: SNat Zero
-  SSuc  :: SNat n -> SNat (Suc n)
-
 deriving instance Eq (SNat n)
 deriving instance Ord (SNat n)
 deriving instance Show (SNat n)
-deriving instance Typeable SNat
 
 snat :: QuasiQuoter
 snat = QuasiQuoter {
@@ -82,14 +81,10 @@ snat = QuasiQuoter {
         go 0 = [p| SZero |]
         go n = [p| SSuc $(go (n - 1)) |]
 
-class SNatI (n :: Nat) where
-  sNat :: SNat n
+type SNatI (n :: Nat) = SingI n
 
-instance SNatI Zero where
-  sNat = SZero
-
-instance SNatI n => SNatI (Suc n) where
-  sNat = SSuc sNat
+sNat :: SNatI n => SNat n
+sNat = sing
 
 ind :: forall r n.
        r Zero
